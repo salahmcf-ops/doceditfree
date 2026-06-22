@@ -158,6 +158,40 @@
   #cvpaper .chips span{font-size:10.2px;background:#eef3f3;color:#13345F;border-radius:4px;padding:2px 7px}
   #cvpaper .lang{display:flex;justify-content:space-between;max-width:300px;font-size:10.6px;margin-bottom:2px}
   #cvpaper .lang b{font-weight:600}
+  #cvpaper .pd{font-size:10.3px;color:#333;margin-bottom:2px}
+  #cvpaper .pd b{color:#111}
+  /* CV model picker */
+  .cvmodels{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .cvmodel{flex:1;min-width:88px;border:1.5px solid var(--line-strong);border-radius:9px;padding:9px 8px;background:var(--surface);cursor:pointer;text-align:center;transition:.12s}
+  .cvmodel:hover{border-color:var(--teal)}
+  .cvmodel.active{border-color:var(--teal);background:var(--teal-soft)}
+  .cvmodel b{display:block;font-size:12.5px;color:var(--navy);font-family:var(--disp);font-weight:700}
+  .cvmodel span{font-family:var(--mono);font-size:8.5px;letter-spacing:.04em;color:var(--muted)}
+  .cvmodel span.safe{color:var(--green)}
+  .cvphoto{width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid var(--line)}
+  /* MODERN */
+  #cvpaper.tpl-modern .head-band{background:#E4F4F4;border-radius:9px;padding:15px 17px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+  #cvpaper.tpl-modern .head-band h2{margin:0}
+  #cvpaper.tpl-modern .sec{color:#1AA6AD;border-bottom:2px solid #BFE6E5}
+  #cvpaper.tpl-modern .chips span{background:#1AA6AD;color:#fff}
+  /* COMPACT */
+  #cvpaper.tpl-compact{font-size:10.2px;padding:24px 26px}
+  #cvpaper.tpl-compact h2{font-size:18px}
+  #cvpaper.tpl-compact .sec{margin:10px 0 5px;font-size:9.6px}
+  #cvpaper.tpl-compact .job{margin-bottom:6px}
+  #cvpaper.tpl-compact ul{padding-left:14px}
+  /* TWO-COLUMN */
+  #cvpaper.tpl-two{padding:0;display:flex;align-items:stretch}
+  #cvpaper.tpl-two .cv-side{width:35%;background:#13345F;color:#e7eef7;padding:24px 17px}
+  #cvpaper.tpl-two .cv-main{width:65%;padding:26px 24px}
+  #cvpaper.tpl-two .cv-side .sec{color:#9FE3E0;border-bottom:1px solid rgba(255,255,255,.25)}
+  #cvpaper.tpl-two .cv-side .chips span{background:rgba(255,255,255,.14);color:#fff}
+  #cvpaper.tpl-two .cv-side .pd,#cvpaper.tpl-two .cv-side .pd b,#cvpaper.tpl-two .cv-side .lang{color:#dce6f2}
+  #cvpaper.tpl-two .cv-side .lang b{color:#fff}
+  #cvpaper.tpl-two .cv-side .cline{font-size:10px;margin-bottom:4px;word-break:break-word;color:#dce6f2}
+  #cvpaper.tpl-two .cv-main h2{color:#13345F}
+  #cvpaper.tpl-two .photo-wrap{text-align:center;margin-bottom:14px}
+  #cvpaper.tpl-two .photo-wrap .cvphoto{width:96px;height:96px;border-radius:10px;border:2px solid rgba(255,255,255,.3)}
 
   /* crop */
   #crop_stage{position:relative;display:inline-block;max-width:100%;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);touch-action:none}
@@ -217,9 +251,17 @@
     <!-- ============ CV BUILDER ============ -->
     <section class="panel active" id="cv">
       <h2 class="ptitle">ATS CV Builder</h2>
-      <p class="pdesc">A single-column, applicant-tracking-friendly resume. Fill it in, watch it build live, then export as an editable Word file or PDF — both keep real, selectable text.</p>
+      <p class="pdesc">Pick a model, fill it in, watch it build live, then export as an editable Word file or PDF — both keep real, selectable text.</p>
       <div class="grid2">
         <div class="card">
+          <label class="fld"><span>CV model</span></label>
+          <div class="cvmodels">
+            <button class="cvmodel active" data-tpl="classic"><b>Classic</b><span class="safe">ATS-SAFE</span></button>
+            <button class="cvmodel" data-tpl="modern"><b>Modern</b><span class="safe">ATS-OK</span></button>
+            <button class="cvmodel" data-tpl="compact"><b>Compact</b><span class="safe">ATS-SAFE</span></button>
+            <button class="cvmodel" data-tpl="two"><b>Two-Column</b><span>VISUAL</span></button>
+          </div>
+
           <label class="fld"><span>Full name</span><input type="text" id="cv_name" placeholder="Mecif Salah Eddine"></label>
           <label class="fld"><span>Headline / target role</span><input type="text" id="cv_title" placeholder="QHSE Engineer · HSE Trainer"></label>
           <div class="twocol">
@@ -231,7 +273,10 @@
             <label class="fld"><span>LinkedIn</span><input type="text" id="cv_link"></label>
           </div>
           <label class="fld"><span>Portfolio / website (optional)</span><input type="text" id="cv_web"></label>
+          <label class="fld"><span>Profile photo (optional · shows on Modern &amp; Two-Column only)</span><input type="file" id="cv_photo" accept="image/*"></label>
+
           <label class="fld"><span>Professional summary</span><textarea id="cv_sum" placeholder="2–3 lines: who you are, years of experience, strongest result."></textarea></label>
+          <label class="fld"><span>Key achievements (one per line, optional)</span><textarea id="cv_achieve" placeholder="Zero lost-time incidents over 3 years&#10;Trained 1,000+ workers"></textarea></label>
           <label class="fld"><span>Core skills (comma separated)</span><textarea id="cv_skills" placeholder="ISO 45001, NEBOSH IGC, JSA, Permit to Work, LOTO..."></textarea></label>
 
           <label class="fld" style="margin-top:6px"><span>Experience</span></label>
@@ -254,12 +299,27 @@
           <div id="cv_proj"></div>
           <button class="addbtn" id="add_proj">+ Add project</button>
 
+          <label class="fld" style="margin-top:18px"><span>Professional memberships (comma separated, optional)</span><textarea id="cv_member" placeholder="IOSH Member, Member of the Algerian Society of HSE"></textarea></label>
+          <label class="fld"><span>Awards &amp; honours (one per line, optional)</span><textarea id="cv_awards" placeholder="HSE Employee of the Year, 2023"></textarea></label>
+
+          <label class="fld" style="margin-top:6px"><span>Personal details (optional)</span></label>
+          <div class="twocol">
+            <label class="fld"><span>Nationality</span><input type="text" id="cv_nat"></label>
+            <label class="fld"><span>Date of birth</span><input type="text" id="cv_dob"></label>
+          </div>
+          <div class="twocol">
+            <label class="fld"><span>Driving licence</span><input type="text" id="cv_lic"></label>
+            <label class="fld"><span>Marital status</span><input type="text" id="cv_marital"></label>
+          </div>
+          <label class="fld"><span>Interests (comma separated, optional)</span><input type="text" id="cv_interests"></label>
+          <label style="display:flex;align-items:center;gap:9px;margin:6px 0 4px;font-size:13.5px;color:var(--ink)"><input type="checkbox" id="cv_refs"> Add &ldquo;References available on request&rdquo;</label>
+
           <div class="btnrow" style="margin-top:20px">
             <button class="btn" id="cv_word">Download Word (.doc)</button>
             <button class="btn navy" id="cv_pdf">Save as PDF</button>
             <button class="btn ghost" id="cv_demo">Fill example</button>
           </div>
-          <div class="note"><b>ATS tip:</b> the Word file is the safest for applicant tracking systems — it stays editable and fully text-based. Keep it single-column (this template already is) and avoid photos, tables and text boxes.</div>
+          <div class="note"><b>ATS tip:</b> for online applications use <b>Classic</b> or <b>Compact</b> and export <b>Word</b> — that's what tracking systems read best. The Word export is always single-column and text-only (no photo) for maximum compatibility, whichever model you preview. Use <b>Modern</b> / <b>Two-Column</b> + PDF when a human will read it (LinkedIn, networking, portfolios).</div>
         </div>
         <div class="cvwrap">
           <div class="cvscroll"><div id="cvpaper"></div></div>
@@ -495,31 +555,59 @@ $('#add_cert').onclick=()=>$('#cv_cert').appendChild(makeEntry(certHtml({}),rend
 $('#add_lang').onclick=()=>$('#cv_lang').appendChild(makeEntry(langHtml({}),renderCV));
 $('#add_proj').onclick=()=>$('#cv_proj').appendChild(makeEntry(projHtml({}),renderCV));
 $$('#cv input,#cv textarea').forEach(i=>i.addEventListener('input',renderCV));
+$('#cv_refs').addEventListener('change',renderCV);
+let currentTpl='classic', cvPhotoData=null;
+$$('.cvmodel').forEach(b=>b.addEventListener('click',()=>{$$('.cvmodel').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentTpl=b.dataset.tpl;renderCV();}));
+$('#cv_photo').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{cvPhotoData=r.result;renderCV();};r.readAsDataURL(f);});
+function listSplit(s,sep){return s.split(sep).map(x=>x.trim()).filter(Boolean);}
+function lines(s){return s.split('\n').map(x=>x.trim()).filter(Boolean);}
 
 function val(id){return $('#'+id).value.trim();}
 function collect(sel,fields){return $$(sel+' .entry').map(e=>{const o={};for(const[k,c]of Object.entries(fields))o[k]=e.querySelector(c).value.trim();return o;});}
-function buildCVHtml(){
-  const name=val('cv_name')||'Your Name';
-  let h=`<h2>${esc(name)}</h2>`;
-  if(val('cv_title'))h+=`<div class="role">${esc(val('cv_title'))}</div>`;
-  const c=[val('cv_email'),val('cv_phone'),val('cv_loc'),val('cv_link'),val('cv_web')].filter(Boolean);
-  if(c.length)h+=`<div class="contact">${c.map(esc).join('  ·  ')}</div>`;
-  if(val('cv_sum'))h+=`<div class="sec">Professional Summary</div><div>${esc(val('cv_sum'))}</div>`;
-  const sk=val('cv_skills').split(',').map(s=>s.trim()).filter(Boolean);
-  if(sk.length)h+=`<div class="sec">Core Skills</div><div class="chips">${sk.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`;
-  const exp=collect('#cv_exp',{title:'.e_title',org:'.e_org',dt:'.e_dt',bul:'.e_bul'}).filter(e=>e.title||e.org);
-  if(exp.length){h+=`<div class="sec">Professional Experience</div>`;exp.forEach(e=>{h+=`<div class="job"><div class="jobhead"><b>${esc(e.title)}</b><span class="dt">${esc(e.dt)}</span></div>`;if(e.org)h+=`<div class="org">${esc(e.org)}</div>`;const b=e.bul.split('\n').map(x=>x.trim()).filter(Boolean);if(b.length)h+=`<ul>${b.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;h+=`</div>`;});}
-  const edu=collect('#cv_edu',{deg:'.d_deg',org:'.d_org',dt:'.d_dt'}).filter(e=>e.deg||e.org);
-  if(edu.length){h+=`<div class="sec">Education</div>`;edu.forEach(e=>{h+=`<div class="job"><div class="jobhead"><b>${esc(e.deg)}</b><span class="dt">${esc(e.dt)}</span></div>`+(e.org?`<div class="org">${esc(e.org)}</div>`:'')+`</div>`;});}
-  const cert=collect('#cv_cert',{name:'.c_name',yr:'.c_yr'}).filter(e=>e.name);
-  if(cert.length){h+=`<div class="sec">Certifications</div><ul>${cert.map(e=>`<li>${esc(e.name)}${e.yr?' — '+esc(e.yr):''}</li>`).join('')}</ul>`;}
-  const lang=collect('#cv_lang',{name:'.l_name',lvl:'.l_lvl'}).filter(e=>e.name);
-  if(lang.length){h+=`<div class="sec">Languages</div>`+lang.map(e=>`<div class="lang"><b>${esc(e.name)}</b><span>${esc(e.lvl)}</span></div>`).join('');}
-  const proj=collect('#cv_proj',{name:'.p_name',desc:'.p_desc'}).filter(e=>e.name);
-  if(proj.length){h+=`<div class="sec">Key Projects</div>`;proj.forEach(e=>{h+=`<div class="job"><b>${esc(e.name)}</b>`+(e.desc?`<div>${esc(e.desc)}</div>`:'')+`</div>`;});}
-  return h;
+function cvData(){return{
+  name:val('cv_name')||'Your Name',title:val('cv_title'),
+  email:val('cv_email'),phone:val('cv_phone'),loc:val('cv_loc'),link:val('cv_link'),web:val('cv_web'),
+  sum:val('cv_sum'),achieve:lines(val('cv_achieve')),skills:listSplit(val('cv_skills'),','),
+  exp:collect('#cv_exp',{title:'.e_title',org:'.e_org',dt:'.e_dt',bul:'.e_bul'}).filter(e=>e.title||e.org),
+  edu:collect('#cv_edu',{deg:'.d_deg',org:'.d_org',dt:'.d_dt'}).filter(e=>e.deg||e.org),
+  cert:collect('#cv_cert',{name:'.c_name',yr:'.c_yr'}).filter(e=>e.name),
+  lang:collect('#cv_lang',{name:'.l_name',lvl:'.l_lvl'}).filter(e=>e.name),
+  proj:collect('#cv_proj',{name:'.p_name',desc:'.p_desc'}).filter(e=>e.name),
+  member:listSplit(val('cv_member'),','),awards:lines(val('cv_awards')),
+  interests:listSplit(val('cv_interests'),','),
+  nat:val('cv_nat'),dob:val('cv_dob'),lic:val('cv_lic'),marital:val('cv_marital'),
+  refs:$('#cv_refs').checked
+};}
+const SEC=(t,inner)=>`<div class="sec">${t}</div>${inner}`;
+const rSummary=d=>d.sum?SEC('Professional Summary',`<div>${esc(d.sum)}</div>`):'';
+const rAchieve=d=>d.achieve.length?SEC('Key Achievements',`<ul>${d.achieve.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`):'';
+const rSkills=d=>d.skills.length?SEC('Core Skills',`<div class="chips">${d.skills.map(s=>`<span>${esc(s)}</span>`).join('')}</div>`):'';
+const rExp=d=>d.exp.length?SEC('Professional Experience',d.exp.map(e=>{const b=lines(e.bul);return `<div class="job"><div class="jobhead"><b>${esc(e.title)}</b><span class="dt">${esc(e.dt)}</span></div>${e.org?`<div class="org">${esc(e.org)}</div>`:''}${b.length?`<ul>${b.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>`;}).join('')):'';
+const rEdu=d=>d.edu.length?SEC('Education',d.edu.map(e=>`<div class="job"><div class="jobhead"><b>${esc(e.deg)}</b><span class="dt">${esc(e.dt)}</span></div>${e.org?`<div class="org">${esc(e.org)}</div>`:''}</div>`).join('')):'';
+const rCert=d=>d.cert.length?SEC('Certifications',`<ul>${d.cert.map(e=>`<li>${esc(e.name)}${e.yr?' — '+esc(e.yr):''}</li>`).join('')}</ul>`):'';
+const rLang=d=>d.lang.length?SEC('Languages',d.lang.map(e=>`<div class="lang"><b>${esc(e.name)}</b><span>${esc(e.lvl)}</span></div>`).join('')):'';
+const rProj=d=>d.proj.length?SEC('Key Projects',d.proj.map(e=>`<div class="job"><b>${esc(e.name)}</b>${e.desc?`<div>${esc(e.desc)}</div>`:''}</div>`).join('')):'';
+const rMember=d=>d.member.length?SEC('Memberships',`<ul>${d.member.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`):'';
+const rAwards=d=>d.awards.length?SEC('Awards & Honours',`<ul>${d.awards.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`):'';
+const rInterests=d=>d.interests.length?SEC('Interests',`<div class="chips">${d.interests.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`):'';
+const rPersonal=d=>{const it=[['Nationality',d.nat],['Date of birth',d.dob],['Driving licence',d.lic],['Marital status',d.marital]].filter(x=>x[1]);return it.length?SEC('Personal Details',it.map(x=>`<div class="pd"><b>${x[0]}:</b> ${esc(x[1])}</div>`).join('')):'';};
+const rRefs=d=>d.refs?SEC('References',`<div>Available on request.</div>`):'';
+const contactInline=d=>{const c=[d.email,d.phone,d.loc,d.link,d.web].filter(Boolean);return c.length?`<div class="contact">${c.map(esc).join('  ·  ')}</div>`:'';};
+const contactLines=d=>{const c=[d.email,d.phone,d.loc,d.link,d.web].filter(Boolean);return c.length?`<div class="contact">${c.map(x=>`<div class="cline">${esc(x)}</div>`).join('')}</div>`:'';};
+function buildCVHtml(tpl){
+  tpl=tpl||currentTpl;const d=cvData();
+  const photo=cvPhotoData?`<img class="cvphoto" src="${cvPhotoData}">`:'';
+  if(tpl==='two'){
+    const side=`<div class="cv-side">${cvPhotoData?`<div class="photo-wrap">${photo}</div>`:''}${contactLines(d)}${rSkills(d)}${rLang(d)}${rCert(d)}${rMember(d)}${rInterests(d)}${rPersonal(d)}</div>`;
+    const main=`<div class="cv-main"><h2>${esc(d.name)}</h2>${d.title?`<div class="role">${esc(d.title)}</div>`:''}${rSummary(d)}${rAchieve(d)}${rExp(d)}${rEdu(d)}${rProj(d)}${rAwards(d)}${rRefs(d)}</div>`;
+    return side+main;
+  }
+  let head;
+  if(tpl==='modern'){head=`<div class="head-band">${cvPhotoData?photo:''}<div><h2>${esc(d.name)}</h2>${d.title?`<div class="role">${esc(d.title)}</div>`:''}${contactInline(d)}</div></div>`;}
+  else{head=`<h2>${esc(d.name)}</h2>${d.title?`<div class="role">${esc(d.title)}</div>`:''}${contactInline(d)}`;}
+  return head+rSummary(d)+rAchieve(d)+rSkills(d)+rExp(d)+rEdu(d)+rCert(d)+rMember(d)+rProj(d)+rAwards(d)+rLang(d)+rInterests(d)+rPersonal(d)+rRefs(d);
 }
-function renderCV(){$('#cvpaper').innerHTML=buildCVHtml();}
+function renderCV(){const p=$('#cvpaper');p.className='tpl-'+currentTpl;p.innerHTML=buildCVHtml();}
 
 $('#cv_word').onclick=()=>{
   const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><style>
@@ -527,13 +615,13 @@ $('#cv_word').onclick=()=>{
     h2{font-size:18pt;margin:0 0 1pt} .role{color:#1AA6AD;font-weight:bold;margin-bottom:3pt} .contact{font-size:9.5pt;color:#444;margin-bottom:9pt}
     .sec{font-size:10.5pt;font-weight:bold;text-transform:uppercase;color:#13345F;border-bottom:1px solid #13345F;margin:11pt 0 4pt;padding-bottom:2pt}
     .jobhead{font-weight:bold} .dt{font-weight:normal;color:#555} .org{font-style:italic;color:#333}
-    ul{margin:2pt 0 0 0} li{margin-bottom:1pt} .chips span{display:inline-block;margin:1pt 5pt 1pt 0} .lang{margin-bottom:1pt}
-  </style></head><body>${buildCVHtml()}</body></html>`;
+    ul{margin:2pt 0 0 0} li{margin-bottom:1pt} .chips span{display:inline-block;margin:1pt 5pt 1pt 0} .lang{margin-bottom:1pt} .pd{font-size:10pt;margin-bottom:1pt}
+  </style></head><body>${buildCVHtml('classic')}</body></html>`;
   download(new Blob(['\ufeff'+html],{type:'application/msword'}),(val('cv_name')||'CV').replace(/\s+/g,'_')+'.doc');
 };
 $('#cv_pdf').onclick=()=>{
   const w=window.open('','_blank');const css=document.querySelector('style').innerHTML;
-  w.document.write(`<html><head><title>${esc(val('cv_name')||'CV')}</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><style>${css} body{background:#fff;margin:0} #cvpaper{max-width:760px;margin:0 auto;padding:42px 48px} @media print{@page{margin:13mm}}</style></head><body><div id="cvpaper">${buildCVHtml()}</div><script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></body></html>`);
+  w.document.write(`<html><head><title>${esc(val('cv_name')||'CV')}</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><style>${css} body{background:#fff;margin:0} #cvpaper{max-width:760px;margin:0 auto} #cvpaper:not(.tpl-two){padding:42px 48px} @media print{@page{margin:0}}</style></head><body><div id="cvpaper" class="tpl-${currentTpl}">${buildCVHtml()}</div><script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></body></html>`);
   w.document.close();
 };
 $('#cv_demo').onclick=()=>{
@@ -543,6 +631,11 @@ $('#cv_demo').onclick=()=>{
   set('cv_loc','Algeria · open to MENA / offshore');set('cv_link','linkedin.com/in/yourprofile');set('cv_web','');
   set('cv_sum','QHSE Engineer with 8+ years across EPC construction, pipeline, drilling and live gas-processing operations. Zero lost-time incidents across managed scopes; trained 1,000+ field personnel.');
   set('cv_skills','ISO 45001, ISO 14001, ISO 9001, NEBOSH IGC, IOSH Managing Safely, JSA, Permit to Work, LOTO, SIMOPS, Emergency Response, IWCF Well Control');
+  set('cv_achieve','Maintained a verified zero lost-time-incident record across all managed scopes\nDelivered HSE induction and training to 1,000+ field workers');
+  set('cv_member','IOSH Member');set('cv_awards','HSE Performance Recognition, CPECC 2023');
+  set('cv_nat','Algerian');set('cv_lic','Category B');
+  set('cv_interests','Mentoring, Field safety innovation, Reading');
+  $('#cv_refs').checked=true;
   ['cv_exp','cv_edu','cv_cert','cv_lang','cv_proj'].forEach(id=>$('#'+id).innerHTML='');
   $('#cv_exp').appendChild(makeEntry(expHtml({title:'QHSE Engineer',org:'CPECC — Succursale Algérie',dt:'2021 – Present',bul:'Led HSE on brownfield EPC works at a live gas-processing facility (SONATRACH client).\nProduced the full HSE management plan and Sonatrach HSE annexes for tender bids.\nDelivered toolbox talks and managing-safely training to 1,000+ workers.'}),renderCV));
   $('#cv_edu').appendChild(makeEntry(eduHtml({deg:'Master’s, QHSE Management',org:'University of Batna 2',dt:'2018'}),renderCV));
