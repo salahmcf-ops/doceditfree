@@ -28,6 +28,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/2.1.5/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --bg:#F4F7FA; --surface:#FFFFFF; --ink:#16233B;
@@ -198,6 +199,15 @@
   #crop_stage canvas{display:block;max-width:100%}
   #crop_rect{position:absolute;border:2px solid var(--teal);background:rgba(26,166,173,.12);cursor:move;display:none}
 
+  #icrop_stage{position:relative;display:inline-block;max-width:100%;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);touch-action:none}
+  #icrop_stage img{display:block;max-width:100%}
+  #icrop_rect{position:absolute;border:2px solid var(--teal);background:rgba(26,166,173,.12);display:none}
+  #rot_canvas{max-width:100%;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+  #sig_pad{border:1px dashed var(--line-strong);border-radius:8px;background:#fff;touch-action:none;width:100%;max-width:430px;height:160px;display:block;cursor:crosshair}
+  #qr_out{margin-top:16px}
+  #qr_out canvas,#qr_out img{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+  .txtbig{width:100%;min-height:170px;font-size:14px;line-height:1.5}
+  .ministat{font-family:var(--mono);font-size:11.5px;color:var(--teal-dark);background:var(--teal-soft);padding:8px 11px;border-radius:8px;margin-top:12px}
   @media(max-width:880px){
     .app{grid-template-columns:1fr}
     aside{position:static;height:auto;display:flex;flex-direction:column;border-right:none;border-bottom:1px solid var(--line)}
@@ -223,6 +233,9 @@
       <div class="navgroup">
         <h4>Convert</h4>
         <button class="navitem" data-tool="img"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg> Image Converter</button>
+        <button class="navitem" data-tool="rsz"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg> Resize &amp; Compress</button>
+        <button class="navitem" data-tool="icrop"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M2 6h14a2 2 0 0 1 2 2v14"/></svg> Crop Image</button>
+        <button class="navitem" data-tool="rot"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg> Rotate &amp; Flip</button>
         <button class="navitem" data-tool="ocr"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h2M7 12h6M7 16h4"/></svg> Image → Word (OCR)</button>
         <button class="navitem" data-tool="p2i"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><circle cx="9" cy="13" r="1.5"/><path d="m7 19 4-4 3 3"/></svg> PDF → Images</button>
         <button class="navitem" data-tool="i2p"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m21 15-5-5L5 21"/><path d="M14 3v6h6" opacity=".4"/></svg> Images → PDF</button>
@@ -232,10 +245,19 @@
       <div class="navgroup">
         <h4>PDF Tools</h4>
         <button class="navitem" data-tool="merge"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M9 12h6"/></svg> Merge PDF</button>
+        <button class="navitem" data-tool="split"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M10 20H4v-6M20 4l-6 6M4 20l6-6"/></svg> Split PDF</button>
         <button class="navitem" data-tool="comp"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 12h6"/></svg> Compress PDF</button>
         <button class="navitem" data-tool="org"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Organize Pages</button>
         <button class="navitem" data-tool="crop"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M2 6h14a2 2 0 0 1 2 2v14"/></svg> Crop PDF</button>
+        <button class="navitem" data-tool="wm"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"/></svg> Watermark</button>
+        <button class="navitem" data-tool="pgn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></svg> Page Numbers</button>
+        <button class="navitem" data-tool="sign"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/></svg> Sign PDF</button>
         <button class="navitem" data-tool="trans"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg> Translate PDF</button>
+      </div>
+      <div class="navgroup">
+        <h4>Generate</h4>
+        <button class="navitem" data-tool="qr"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M17 21h4M21 17v4"/></svg> QR Code</button>
+        <button class="navitem" data-tool="txt"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V5h16v2M9 5v14M7 19h4"/></svg> Text Tools</button>
       </div>
     </div>
     <div class="sidefoot"><span class="dot"></span> 100% in your browser</div>
@@ -495,6 +517,163 @@
       </div>
     </section>
 
+    <!-- RESIZE & COMPRESS -->
+    <section class="panel" id="rsz">
+      <h2 class="ptitle">Resize &amp; Compress Image</h2>
+      <p class="pdesc">Shrink file size and/or cap the width. Great for web, email and upload limits.</p>
+      <div class="card">
+        <div class="drop" id="rsz_drop"><strong>Drop images here</strong> or click to choose<span class="hint">Batch supported</span></div>
+        <input type="file" id="rsz_input" accept="image/*" multiple hidden>
+        <div class="controls">
+          <label class="fld"><span>Max width (px, blank = keep)</span><input type="text" id="rsz_w" placeholder="1280"></label>
+          <label class="fld"><span>Quality</span><select id="rsz_q"><option value="0.9">High</option><option value="0.75" selected>Medium</option><option value="0.6">Small</option></select></label>
+          <label class="fld"><span>Format</span><select id="rsz_fmt"><option value="keep">Keep</option><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WEBP</option></select></label>
+          <button class="btn" id="rsz_go" disabled>Process</button>
+        </div>
+        <div class="status" id="rsz_status"></div>
+        <div class="imggrid" id="rsz_out"></div>
+      </div>
+    </section>
+
+    <!-- CROP IMAGE -->
+    <section class="panel" id="icrop">
+      <h2 class="ptitle">Crop Image</h2>
+      <p class="pdesc">Drag a box over the image to crop it.</p>
+      <div class="card">
+        <div class="drop" id="icrop_drop"><strong>Drop an image here</strong> or click to choose<span class="hint">Drag to set crop area</span></div>
+        <input type="file" id="icrop_input" accept="image/*" hidden>
+        <div id="icrop_holder" style="margin-top:16px;display:none">
+          <div id="icrop_stage"><div id="icrop_rect"></div></div>
+          <div class="btnrow" style="margin-top:16px"><button class="btn" id="icrop_go">Crop &amp; download</button><button class="btn ghost" id="icrop_reset">Reset box</button></div>
+        </div>
+        <div class="status" id="icrop_status"></div>
+      </div>
+    </section>
+
+    <!-- ROTATE & FLIP -->
+    <section class="panel" id="rot">
+      <h2 class="ptitle">Rotate &amp; Flip Image</h2>
+      <p class="pdesc">Rotate or mirror an image, then download.</p>
+      <div class="card">
+        <div class="drop" id="rot_drop"><strong>Drop an image here</strong> or click to choose<span class="hint">JPG · PNG · WEBP</span></div>
+        <input type="file" id="rot_input" accept="image/*" hidden>
+        <div id="rot_holder" style="margin-top:16px;display:none">
+          <canvas id="rot_canvas"></canvas>
+          <div class="btnrow" style="margin-top:16px">
+            <button class="btn ghost" id="rot_left">⟲ Left</button>
+            <button class="btn ghost" id="rot_right">⟳ Right</button>
+            <button class="btn ghost" id="rot_fh">⇋ Flip H</button>
+            <button class="btn ghost" id="rot_fv">⇅ Flip V</button>
+            <button class="btn" id="rot_dl">Download</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPLIT PDF -->
+    <section class="panel" id="split">
+      <h2 class="ptitle">Split PDF</h2>
+      <p class="pdesc">Pull specific pages into a new PDF, or break every page into its own file.</p>
+      <div class="card">
+        <div class="drop" id="split_drop"><strong>Drop a PDF here</strong> or click to choose<span class="hint">Extract pages or split all</span></div>
+        <input type="file" id="split_input" accept="application/pdf" hidden>
+        <div class="controls">
+          <label class="fld"><span>Pages to extract</span><input type="text" id="split_range" placeholder="1-3, 5, 8-10"></label>
+          <button class="btn" id="split_go" disabled>Extract pages</button>
+          <button class="btn ghost" id="split_all" disabled>Split every page</button>
+        </div>
+        <div class="status" id="split_status"></div>
+        <div class="note"><b>Tip:</b> &ldquo;Split every page&rdquo; downloads one file per page — your browser may ask to allow multiple downloads.</div>
+      </div>
+    </section>
+
+    <!-- WATERMARK -->
+    <section class="panel" id="wm">
+      <h2 class="ptitle">Watermark PDF</h2>
+      <p class="pdesc">Stamp diagonal text across every page.</p>
+      <div class="card">
+        <div class="drop" id="wm_drop"><strong>Drop a PDF here</strong> or click to choose<span class="hint">Text watermark on all pages</span></div>
+        <input type="file" id="wm_input" accept="application/pdf" hidden>
+        <div class="controls">
+          <label class="fld"><span>Watermark text</span><input type="text" id="wm_text" placeholder="CONFIDENTIAL"></label>
+          <label class="fld"><span>Opacity</span><select id="wm_op"><option value="0.12">Light</option><option value="0.2" selected>Medium</option><option value="0.35">Strong</option></select></label>
+          <button class="btn" id="wm_go" disabled>Add watermark</button>
+        </div>
+        <div class="status" id="wm_status"></div>
+      </div>
+    </section>
+
+    <!-- PAGE NUMBERS -->
+    <section class="panel" id="pgn">
+      <h2 class="ptitle">Add Page Numbers</h2>
+      <p class="pdesc">Number every page of a PDF.</p>
+      <div class="card">
+        <div class="drop" id="pgn_drop"><strong>Drop a PDF here</strong> or click to choose<span class="hint">Numbers added to every page</span></div>
+        <input type="file" id="pgn_input" accept="application/pdf" hidden>
+        <div class="controls">
+          <label class="fld"><span>Position</span><select id="pgn_pos"><option value="center" selected>Bottom center</option><option value="right">Bottom right</option><option value="left">Bottom left</option></select></label>
+          <label class="fld"><span>Start at</span><input type="text" id="pgn_start" value="1"></label>
+          <button class="btn" id="pgn_go" disabled>Add numbers</button>
+        </div>
+        <div class="status" id="pgn_status"></div>
+      </div>
+    </section>
+
+    <!-- SIGN -->
+    <section class="panel" id="sign">
+      <h2 class="ptitle">Sign PDF</h2>
+      <p class="pdesc">Draw your signature and place it on the document. It never leaves your device.</p>
+      <div class="card">
+        <div class="drop" id="sign_drop"><strong>Drop a PDF here</strong> or click to choose<span class="hint">Then draw and place your signature</span></div>
+        <input type="file" id="sign_input" accept="application/pdf" hidden>
+        <label class="fld" style="margin-top:16px"><span>Draw your signature</span></label>
+        <canvas id="sig_pad" width="430" height="160"></canvas>
+        <div class="controls">
+          <label class="fld"><span>Page (blank = last)</span><input type="text" id="sign_page" placeholder="last"></label>
+          <label class="fld"><span>Position</span><select id="sign_pos"><option value="right" selected>Bottom right</option><option value="left">Bottom left</option><option value="center">Bottom center</option></select></label>
+          <label class="fld"><span>Size</span><select id="sign_size"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select></label>
+        </div>
+        <div class="btnrow" style="margin-top:6px"><button class="btn" id="sign_go" disabled>Place &amp; download</button><button class="btn ghost" id="sig_clear">Clear signature</button></div>
+        <div class="status" id="sign_status"></div>
+      </div>
+    </section>
+
+    <!-- QR CODE -->
+    <section class="panel" id="qr">
+      <h2 class="ptitle">QR Code Generator</h2>
+      <p class="pdesc">Turn a link or any text into a downloadable QR code.</p>
+      <div class="card">
+        <label class="fld"><span>Text or URL</span><input type="text" id="qr_text" placeholder="https://doceditfree.com"></label>
+        <div class="controls">
+          <label class="fld"><span>Size</span><select id="qr_size"><option value="200">Small</option><option value="300" selected>Medium</option><option value="500">Large</option></select></label>
+          <button class="btn" id="qr_go">Generate</button>
+          <button class="btn ghost" id="qr_dl" style="display:none">Download PNG</button>
+        </div>
+        <div class="status" id="qr_status"></div>
+        <div id="qr_out"></div>
+      </div>
+    </section>
+
+    <!-- TEXT TOOLS -->
+    <section class="panel" id="txt">
+      <h2 class="ptitle">Text Tools</h2>
+      <p class="pdesc">Count, clean and change the case of any text.</p>
+      <div class="card">
+        <label class="fld"><span>Your text</span><textarea id="txt_area" class="txtbig" placeholder="Paste or type text here..."></textarea></label>
+        <div class="ministat" id="txt_stats">0 words · 0 characters · 0 lines · 0 sentences</div>
+        <div class="btnrow" style="margin-top:14px">
+          <button class="btn ghost" id="txt_upper">UPPERCASE</button>
+          <button class="btn ghost" id="txt_lower">lowercase</button>
+          <button class="btn ghost" id="txt_title">Title Case</button>
+          <button class="btn ghost" id="txt_sentence">Sentence case</button>
+          <button class="btn ghost" id="txt_trim">Trim spaces</button>
+          <button class="btn ghost" id="txt_blank">Remove blank lines</button>
+          <button class="btn" id="txt_copy">Copy</button>
+        </div>
+        <div class="status" id="txt_status"></div>
+      </div>
+    </section>
+
     </div>
   </main>
 </div>
@@ -510,7 +689,7 @@ function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 function setStatus(id,msg,cls){const e=$(id);e.textContent=msg;e.className='status'+(cls?' '+cls:'');}
 
 /* ============ navigation ============ */
-const crumbs={cv:'ATS CV Builder',img:'Image Converter',ocr:'Image → Word (OCR)',p2i:'PDF → Images',i2p:'Images → PDF',p2w:'PDF → Word',p2x:'PDF → Excel',merge:'Merge PDF',comp:'Compress PDF',org:'Organize Pages',crop:'Crop PDF',trans:'Translate PDF'};
+const crumbs={cv:'ATS CV Builder',img:'Image Converter',rsz:'Resize & Compress',icrop:'Crop Image',rot:'Rotate & Flip',ocr:'Image → Word (OCR)',p2i:'PDF → Images',i2p:'Images → PDF',p2w:'PDF → Word',p2x:'PDF → Excel',merge:'Merge PDF',split:'Split PDF',comp:'Compress PDF',org:'Organize Pages',crop:'Crop PDF',wm:'Watermark PDF',pgn:'Page Numbers',sign:'Sign PDF',trans:'Translate PDF',qr:'QR Code',txt:'Text Tools'};
 $$('.navitem').forEach(n=>n.addEventListener('click',()=>{
   $$('.navitem').forEach(x=>x.classList.remove('active'));
   $$('.panel').forEach(x=>x.classList.remove('active'));
@@ -841,6 +1020,103 @@ $('#trans_go').onclick=async()=>{
 };
 $('#trans_copy').onclick=()=>{navigator.clipboard.writeText($('#trans_text').value);setStatus('#trans_status','Copied.','ok');};
 $('#trans_gt').onclick=()=>{const t=encodeURIComponent($('#trans_text').value.slice(0,4500));window.open(`https://translate.google.com/?sl=auto&tl=en&text=${t}&op=translate`,'_blank');};
+
+/* ===================================================================
+   GENERIC DRAG-SELECT (image crop)
+=================================================================== */
+function dragSelect(stageId,rectId,onEnd){
+  const stage=$('#'+stageId),rect=$('#'+rectId);let sx,sy,drawing=false;
+  const pos=e=>{const r=stage.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:Math.max(0,Math.min(r.width,t.clientX-r.left)),y:Math.max(0,Math.min(r.height,t.clientY-r.top))};};
+  const start=e=>{e.preventDefault();const p=pos(e);sx=p.x;sy=p.y;drawing=true;rect.style.display='block';rect.style.left=sx+'px';rect.style.top=sy+'px';rect.style.width='0px';rect.style.height='0px';};
+  const move=e=>{if(!drawing)return;const p=pos(e);rect.style.left=Math.min(sx,p.x)+'px';rect.style.top=Math.min(sy,p.y)+'px';rect.style.width=Math.abs(p.x-sx)+'px';rect.style.height=Math.abs(p.y-sy)+'px';};
+  const end=()=>{if(!drawing)return;drawing=false;const r=stage.getBoundingClientRect();onEnd({x:parseFloat(rect.style.left),y:parseFloat(rect.style.top),w:parseFloat(rect.style.width),h:parseFloat(rect.style.height)},r);};
+  stage.addEventListener('mousedown',start);window.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  stage.addEventListener('touchstart',start);stage.addEventListener('touchmove',move);stage.addEventListener('touchend',end);
+}
+
+/* ===== RESIZE & COMPRESS ===== */
+let rszFiles=[];
+wireDrop('rsz_drop','rsz_input',f=>{rszFiles=f.filter(x=>x.type.startsWith('image/'));$('#rsz_go').disabled=!rszFiles.length;setStatus('#rsz_status',rszFiles.length+' image(s) ready.');});
+$('#rsz_go').onclick=async()=>{
+  const tw=parseInt($('#rsz_w').value)||0,q=parseFloat($('#rsz_q').value),fmt=$('#rsz_fmt').value;
+  const out=$('#rsz_out');out.innerHTML='';setStatus('#rsz_status','Processing...');
+  for(const f of rszFiles){await new Promise(res=>{const img=new Image();img.onload=()=>{
+    let w=img.naturalWidth,h=img.naturalHeight;if(tw&&tw<w){h=Math.round(h*tw/w);w=tw;}
+    const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
+    let type=fmt==='keep'?(f.type||'image/jpeg'):fmt;if(type!=='image/png'&&type!=='image/webp')type='image/jpeg';
+    if(type==='image/jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);}ctx.drawImage(img,0,0,w,h);
+    const data=c.toDataURL(type,q),blob=dataURLtoBlob(data),ext=type.split('/')[1].replace('jpeg','jpg');
+    const card=document.createElement('div');card.className='imgcard';
+    card.innerHTML=`<img src="${data}"><div class="cap"><span>${w}\u00d7${h} \u00b7 ${fmtBytes(blob.size)}</span><button class="dl">\u2193</button></div>`;
+    card.querySelector('.dl').onclick=()=>download(blob,f.name.replace(/\.[^.]+$/,'')+'-resized.'+ext);
+    out.appendChild(card);URL.revokeObjectURL(img.src);res();};img.onerror=()=>res();img.src=URL.createObjectURL(f);});}
+  setStatus('#rsz_status','Done \u2014 click \u2193 to save each.','ok');
+};
+
+/* ===== CROP IMAGE ===== */
+let icropImg=null,icropBox=null;
+dragSelect('icrop_stage','icrop_rect',(box,r)=>{if(!icropImg)return;const sx=icropImg.naturalWidth/r.width,sy=icropImg.naturalHeight/r.height;icropBox={x:box.x*sx,y:box.y*sy,w:box.w*sx,h:box.h*sy};});
+wireDrop('icrop_drop','icrop_input',f=>{const file=f.find(x=>x.type.startsWith('image/'));if(!file)return;const img=new Image();img.onload=()=>{icropImg=img;const stage=$('#icrop_stage');stage.querySelectorAll('img').forEach(x=>x.remove());stage.insertBefore(img,$('#icrop_rect'));$('#icrop_holder').style.display='block';icropBox=null;$('#icrop_rect').style.display='none';setStatus('#icrop_status','Drag on the image to set the crop area.','ok');};img.src=URL.createObjectURL(file);});
+$('#icrop_reset').onclick=()=>{$('#icrop_rect').style.display='none';icropBox=null;};
+$('#icrop_go').onclick=()=>{if(!icropBox||icropBox.w<5){setStatus('#icrop_status','Draw a crop box first.','err');return;}const c=document.createElement('canvas');c.width=Math.round(icropBox.w);c.height=Math.round(icropBox.h);c.getContext('2d').drawImage(icropImg,icropBox.x,icropBox.y,icropBox.w,icropBox.h,0,0,c.width,c.height);c.toBlob(b=>download(b,'cropped.png'),'image/png');setStatus('#icrop_status','Cropped image downloaded.','ok');};
+
+/* ===== ROTATE & FLIP ===== */
+let rotImg=null,rotAngle=0,flipH=false,flipV=false;
+wireDrop('rot_drop','rot_input',f=>{const file=f.find(x=>x.type.startsWith('image/'));if(!file)return;const img=new Image();img.onload=()=>{rotImg=img;rotAngle=0;flipH=flipV=false;$('#rot_holder').style.display='block';paintRot();};img.src=URL.createObjectURL(file);});
+function paintRot(){if(!rotImg)return;const c=$('#rot_canvas'),swap=rotAngle%180!==0;c.width=swap?rotImg.naturalHeight:rotImg.naturalWidth;c.height=swap?rotImg.naturalWidth:rotImg.naturalHeight;const ctx=c.getContext('2d');ctx.save();ctx.translate(c.width/2,c.height/2);ctx.rotate(rotAngle*Math.PI/180);ctx.scale(flipH?-1:1,flipV?-1:1);ctx.drawImage(rotImg,-rotImg.naturalWidth/2,-rotImg.naturalHeight/2);ctx.restore();}
+$('#rot_left').onclick=()=>{rotAngle=(rotAngle+270)%360;paintRot();};
+$('#rot_right').onclick=()=>{rotAngle=(rotAngle+90)%360;paintRot();};
+$('#rot_fh').onclick=()=>{flipH=!flipH;paintRot();};
+$('#rot_fv').onclick=()=>{flipV=!flipV;paintRot();};
+$('#rot_dl').onclick=()=>{$('#rot_canvas').toBlob(b=>download(b,'image.png'),'image/png');};
+
+/* ===== SPLIT PDF ===== */
+let splitFile=null;
+wireDrop('split_drop','split_input',f=>{splitFile=f.find(x=>x.type==='application/pdf');$('#split_go').disabled=!splitFile;$('#split_all').disabled=!splitFile;$('#split_drop').querySelector('strong').textContent=splitFile?splitFile.name:'Drop a PDF here';});
+function parseRanges(str,max){const out=[];str.split(',').forEach(part=>{part=part.trim();const m=part.match(/^(\d+)\s*-\s*(\d+)$/);if(m){let a=+m[1],b=+m[2];if(a>b){const t=a;a=b;b=t;}for(let i=a;i<=b;i++)if(i>=1&&i<=max)out.push(i-1);}else if(/^\d+$/.test(part)){const n=+part;if(n>=1&&n<=max)out.push(n-1);}});return out;}
+$('#split_go').onclick=async()=>{if(!splitFile)return;setStatus('#split_status','Extracting...');try{const {PDFDocument}=PDFLib;const src=await PDFDocument.load(await splitFile.arrayBuffer());const idx=parseRanges($('#split_range').value,src.getPageCount());if(!idx.length){setStatus('#split_status','Enter valid pages, e.g. 1-3, 5','err');return;}const out=await PDFDocument.create();(await out.copyPages(src,idx)).forEach(p=>out.addPage(p));download(new Blob([await out.save()],{type:'application/pdf'}),splitFile.name.replace(/\.pdf$/i,'')+'-pages.pdf');setStatus('#split_status',`Extracted ${idx.length} page(s).`,'ok');}catch(e){setStatus('#split_status','Could not process that PDF.','err');}};
+$('#split_all').onclick=async()=>{if(!splitFile)return;setStatus('#split_status','Splitting...');try{const {PDFDocument}=PDFLib;const src=await PDFDocument.load(await splitFile.arrayBuffer());const n=src.getPageCount(),base=splitFile.name.replace(/\.pdf$/i,'');for(let i=0;i<n;i++){const out=await PDFDocument.create();const [pg]=await out.copyPages(src,[i]);out.addPage(pg);const bytes=await out.save();download(new Blob([bytes],{type:'application/pdf'}),`${base}_p${i+1}.pdf`);await new Promise(r=>setTimeout(r,350));}setStatus('#split_status',`Split into ${n} files.`,'ok');}catch(e){setStatus('#split_status','Could not split that PDF.','err');}};
+
+/* ===== WATERMARK ===== */
+let wmFile=null;
+wireDrop('wm_drop','wm_input',f=>{wmFile=f.find(x=>x.type==='application/pdf');$('#wm_go').disabled=!wmFile;$('#wm_drop').querySelector('strong').textContent=wmFile?wmFile.name:'Drop a PDF here';});
+$('#wm_go').onclick=async()=>{if(!wmFile)return;const text=($('#wm_text').value.trim()||'CONFIDENTIAL'),op=parseFloat($('#wm_op').value);setStatus('#wm_status','Adding watermark...');try{const {PDFDocument,rgb,degrees,StandardFonts}=PDFLib;const doc=await PDFDocument.load(await wmFile.arrayBuffer());const font=await doc.embedFont(StandardFonts.HelveticaBold);doc.getPages().forEach(p=>{const {width,height}=p.getSize();let fs=Math.max(22,Math.min(64,width/(0.62*Math.max(text.length,4))));const tw=font.widthOfTextAtSize(text,fs);const x=width/2-(tw/2)*0.707,y=height/2-(tw/2)*0.707;p.drawText(text,{x,y,size:fs,font,color:rgb(0.5,0.5,0.5),opacity:op,rotate:degrees(45)});});download(new Blob([await doc.save()],{type:'application/pdf'}),wmFile.name.replace(/\.pdf$/i,'')+'-watermark.pdf');setStatus('#wm_status','Watermark added.','ok');}catch(e){setStatus('#wm_status','Could not watermark that PDF.','err');}};
+
+/* ===== PAGE NUMBERS ===== */
+let pgnFile=null;
+wireDrop('pgn_drop','pgn_input',f=>{pgnFile=f.find(x=>x.type==='application/pdf');$('#pgn_go').disabled=!pgnFile;$('#pgn_drop').querySelector('strong').textContent=pgnFile?pgnFile.name:'Drop a PDF here';});
+$('#pgn_go').onclick=async()=>{if(!pgnFile)return;const posSel=$('#pgn_pos').value,start=parseInt($('#pgn_start').value)||1;setStatus('#pgn_status','Adding numbers...');try{const {PDFDocument,rgb,StandardFonts}=PDFLib;const doc=await PDFDocument.load(await pgnFile.arrayBuffer());const font=await doc.embedFont(StandardFonts.Helvetica);doc.getPages().forEach((p,i)=>{const {width}=p.getSize();const label=String(start+i),fs=11,tw=font.widthOfTextAtSize(label,fs);let x=width/2-tw/2;if(posSel==='left')x=40;else if(posSel==='right')x=width-40-tw;p.drawText(label,{x,y:24,size:fs,font,color:rgb(0.25,0.25,0.25)});});download(new Blob([await doc.save()],{type:'application/pdf'}),pgnFile.name.replace(/\.pdf$/i,'')+'-numbered.pdf');setStatus('#pgn_status','Page numbers added.','ok');}catch(e){setStatus('#pgn_status','Could not process that PDF.','err');}};
+
+/* ===== SIGN PDF ===== */
+let signFile=null;
+const sigCanvas=$('#sig_pad'),sigCtx=sigCanvas.getContext('2d');
+sigCtx.lineWidth=2.6;sigCtx.lineCap='round';sigCtx.lineJoin='round';sigCtx.strokeStyle='#10243f';
+let sigDrawing=false,sigHasInk=false;
+function sigPos(e){const r=sigCanvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:(t.clientX-r.left)*(sigCanvas.width/r.width),y:(t.clientY-r.top)*(sigCanvas.height/r.height)};}
+function sigStart(e){e.preventDefault();sigDrawing=true;const p=sigPos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);}
+function sigMove(e){if(!sigDrawing)return;e.preventDefault();const p=sigPos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();sigHasInk=true;}
+function sigEnd(){sigDrawing=false;}
+sigCanvas.addEventListener('mousedown',sigStart);sigCanvas.addEventListener('mousemove',sigMove);window.addEventListener('mouseup',sigEnd);
+sigCanvas.addEventListener('touchstart',sigStart);sigCanvas.addEventListener('touchmove',sigMove);sigCanvas.addEventListener('touchend',sigEnd);
+$('#sig_clear').onclick=()=>{sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);sigHasInk=false;};
+wireDrop('sign_drop','sign_input',f=>{signFile=f.find(x=>x.type==='application/pdf');$('#sign_go').disabled=!signFile;$('#sign_drop').querySelector('strong').textContent=signFile?signFile.name:'Drop a PDF here';});
+$('#sign_go').onclick=async()=>{if(!signFile){setStatus('#sign_status','Add a PDF first.','err');return;}if(!sigHasInk){setStatus('#sign_status','Draw your signature first.','err');return;}setStatus('#sign_status','Signing...');try{const {PDFDocument}=PDFLib;const doc=await PDFDocument.load(await signFile.arrayBuffer());const png=await doc.embedPng(sigCanvas.toDataURL('image/png'));const pages=doc.getPages();let pi=parseInt($('#sign_page').value);if(!pi||pi<1||pi>pages.length)pi=pages.length;const page=pages[pi-1];const {width,height}=page.getSize();const scale={small:0.18,medium:0.28,large:0.4}[$('#sign_size').value];const w=width*scale,h=w*(sigCanvas.height/sigCanvas.width),m=28,posSel=$('#sign_pos').value;let x=width-w-m;if(posSel==='left')x=m;else if(posSel==='center')x=width/2-w/2;page.drawImage(png,{x,y:m,width:w,height:h});download(new Blob([await doc.save()],{type:'application/pdf'}),signFile.name.replace(/\.pdf$/i,'')+'-signed.pdf');setStatus('#sign_status',`Signed page ${pi}.`,'ok');}catch(e){setStatus('#sign_status','Could not sign that PDF.','err');}};
+
+/* ===== QR CODE ===== */
+$('#qr_go').onclick=()=>{const text=$('#qr_text').value.trim();if(!text){setStatus('#qr_status','Enter text or a URL.','err');return;}if(!window.QRCode){setStatus('#qr_status','QR engine not loaded \u2014 check your connection.','err');return;}const box=$('#qr_out');box.innerHTML='';const size=parseInt($('#qr_size').value)||300;new QRCode(box,{text,width:size,height:size,correctLevel:QRCode.CorrectLevel.M});setStatus('#qr_status','QR code ready.','ok');$('#qr_dl').style.display='inline-flex';};
+$('#qr_dl').onclick=()=>{const cv=$('#qr_out').querySelector('canvas'),im=$('#qr_out').querySelector('img');let url=cv?cv.toDataURL('image/png'):(im?im.src:null);if(url)download(dataURLtoBlob(url),'qrcode.png');};
+
+/* ===== TEXT TOOLS ===== */
+const txtArea=$('#txt_area');
+function txtStats(){const v=txtArea.value;const words=(v.trim().match(/\S+/g)||[]).length,chars=v.length,ln=v?v.split('\n').length:0,sen=(v.match(/[.!?]+(\s|$)/g)||[]).length;$('#txt_stats').textContent=`${words} words \u00b7 ${chars} characters \u00b7 ${ln} lines \u00b7 ${sen} sentences`;}
+txtArea.addEventListener('input',txtStats);txtStats();
+$('#txt_upper').onclick=()=>{txtArea.value=txtArea.value.toUpperCase();txtStats();};
+$('#txt_lower').onclick=()=>{txtArea.value=txtArea.value.toLowerCase();txtStats();};
+$('#txt_title').onclick=()=>{txtArea.value=txtArea.value.replace(/\w\S*/g,w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase());txtStats();};
+$('#txt_sentence').onclick=()=>{txtArea.value=txtArea.value.toLowerCase().replace(/(^\s*\w|[.!?]\s+\w)/g,c=>c.toUpperCase());txtStats();};
+$('#txt_trim').onclick=()=>{txtArea.value=txtArea.value.replace(/[ \t]+/g,' ').replace(/ *\n */g,'\n').trim();txtStats();};
+$('#txt_blank').onclick=()=>{txtArea.value=txtArea.value.replace(/\n{2,}/g,'\n\n').trim();txtStats();};
+$('#txt_copy').onclick=()=>{navigator.clipboard.writeText(txtArea.value);setStatus('#txt_status','Copied.','ok');};
 </script>
 </body>
 </html>
